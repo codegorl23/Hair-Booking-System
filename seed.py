@@ -1,11 +1,13 @@
 from app import create_app, db
 from app.models.service import Service
+from app.models.client import Client
 
 app = create_app()
 
 with app.app_context():
     # Clear existing data
     Service.query.delete()
+    Client.query.delete()
 
     # Add test services
     services = [
@@ -33,5 +35,13 @@ with app.app_context():
     ]
 
     db.session.add_all(services)
-    db.session.commit()
-    print(f'Added {len(services)} services.')
+
+    client = Client(
+        name='Test Client',
+        email='test@example.com',
+        phone='555-0100'
+    )
+
+    db.session.add(client)
+    db.session.commit()         
+    print(f' Added {len(services)} services and 1 client to the database.')

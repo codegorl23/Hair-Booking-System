@@ -1,0 +1,38 @@
+from flask import Blueprint, jsonify, request
+from app.services.appointment_service import create_appointment
+
+appointments_bp = Blueprint('appointments', __name__)
+
+
+@appointments_bp.route('/appointments', methods=['POST'])
+def post_appointment():
+    data = request.get_json()
+
+    # Validate body exists
+    if not data:
+        return jsonify({'error': 'Request body is required'}), 400
+
+    # Validate required fields are present
+    required_fields = ['client_id', 'service_id', 'start_time']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'{field} is required'}), 400
+
+    # Validate types
+    if not isinstance(data['client_id'], int):
+        return jsonify({'error': 'client_id must be an integer'}), 400
+
+    if not isinstance(data['service_id'], int):
+        return jsonify({'error': 'service_id must be an integer'}), 400
+
+    # Call the service layer
+    appointment, error, status_code = create_appointment(
+        client_id=data['client_id'],
+        service_id=data['service_id'],
+        start_time_str=data['start_time']
+    )
+
+    if error:
+        return jsonify({'error': error}), status_code
+
+    return jsonify(appointment.to_dict()), status_code

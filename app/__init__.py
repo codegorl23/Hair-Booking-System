@@ -19,11 +19,16 @@ def create_app():
 
     # Import models so Flask-Migrate can detect them
     from app.models import service  # noqa: F401
+    from app.models import client   # noqa: F401
+    from app.models import appointment  # noqa: F401
 
     # Register blueprints
     from app.routes.health import health_bp
     from app.routes.services import services_bp
+    from app.routes.appointments import appointments_bp
+
     app.register_blueprint(health_bp)
     app.register_blueprint(services_bp)
+    app.register_blueprint(appointments_bp)
 
     return app
