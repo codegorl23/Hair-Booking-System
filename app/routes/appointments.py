@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.services.appointment_service import create_appointment, get_all_appointments
+from app.services.appointment_service import create_appointment, get_all_appointments, get_appointment_by_id
 
 appointments_bp = Blueprint('appointments', __name__)
 
@@ -37,7 +37,19 @@ def post_appointment():
 
     return jsonify(appointment.to_dict()), status_code
 
+
 @appointments_bp.route('/appointments', methods=['GET'])
 def get_appointments():
     appointments = get_all_appointments()
     return jsonify([a.to_dict() for a in appointments]), 200
+
+@appointments_bp.route('/appointments/<int:appointment_id>', methods=['GET'])
+def get_appointment(appointment_id):
+    appointment, error, status_code = get_appointment_by_id(appointment_id)
+
+    if error:
+        return jsonify({'error': error}), status_code
+
+    return jsonify(appointment.to_dict()), status_code
+
+

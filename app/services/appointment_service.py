@@ -68,3 +68,18 @@ def get_all_appointments():
     """
     appointments = Appointment.query.order_by(Appointment.start_time.asc()).all()
     return appointments
+
+
+def get_appointment_by_id(appointment_id):
+    """
+    Returns a single appointment by ID.
+    Returns (appointment, error_message, status_code).
+    On success: (appointment_object, None, 200)
+    On failure: (None, 'error message', 404)
+    """
+    appointment = Appointment.query.get(appointment_id)
+
+    if not appointment:
+        return None, f'No appointment found with id {appointment_id}', 404
+
+    return appointment, None, 200
