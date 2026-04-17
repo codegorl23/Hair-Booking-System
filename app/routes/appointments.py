@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.services.appointment_service import create_appointment, get_all_appointments, get_appointment_by_id
+from app.services.appointment_service import create_appointment, get_all_appointments, get_appointment_by_id, update_appointment_status
 
 appointments_bp = Blueprint('appointments', __name__)
 
@@ -46,6 +46,29 @@ def get_appointments():
 @appointments_bp.route('/appointments/<int:appointment_id>', methods=['GET'])
 def get_appointment(appointment_id):
     appointment, error, status_code = get_appointment_by_id(appointment_id)
+
+    if error:
+        return jsonify({'error': error}), status_code
+
+    return jsonify(appointment.to_dict()), status_code
+
+
+@appointments_bp.route('/appointments/<int:appointment_id>', methods=['PATCH'])
+def patch_appointment(appointment_id):
+    data = request.get_json()
+
+    # Validate body exists
+    if not data:
+        return jsonify({'error': 'Request body is required'}), 400
+
+    # Validate status field is present
+    if 'status' not in data:
+        return jsonify({'error': 'status is required'}), 400
+
+    appointment, error, status_code = update_appointment_status(
+        appointment_id=appointment_id,
+        status=data['status']
+    )
 
     if error:
         return jsonify({'error': error}), status_code

@@ -83,3 +83,31 @@ def get_appointment_by_id(appointment_id):
         return None, f'No appointment found with id {appointment_id}', 404
 
     return appointment, None, 200
+
+
+def update_appointment_status(appointment_id, status):
+    """
+    Updates the status of an appointment.
+    Valid statuses: booked, cancelled, completed.
+    Any status can be changed to any other valid status.
+    Returns (appointment, error_message, status_code).
+    On success: (appointment_object, None, 200)
+    On failure: (None, 'error message', error_code)
+    """
+
+    valid_statuses = ['booked', 'cancelled', 'completed']
+
+    # Check status is valid
+    if status not in valid_statuses:
+        return None, f'status must be one of: {", ".join(valid_statuses)}', 400
+
+    # Check appointment exists
+    appointment = Appointment.query.get(appointment_id)
+    if not appointment:
+        return None, f'No appointment found with id {appointment_id}', 404
+
+    # Update the status
+    appointment.status = status
+    db.session.commit()
+
+    return appointment, None, 200
