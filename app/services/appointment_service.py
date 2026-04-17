@@ -59,3 +59,12 @@ def create_appointment(client_id, service_id, start_time_str):
     db.session.commit()
 
     return appointment, None, 201
+
+
+def get_all_appointments():
+    """
+    Returns all appointments sorted by start_time ascending.
+    Includes cancelled appointments — stylist needs full history.
+    """
+    appointments = Appointment.query.order_by(Appointment.start_time.asc()).all()
+    return appointments
