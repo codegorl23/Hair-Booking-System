@@ -3,6 +3,8 @@ from app.services.client_service import create_client
 
 clients_bp = Blueprint('clients', __name__)
 
+# Access Control:
+# POST /clients   - No auth required - Public (registration)
 
 @clients_bp.route('/clients', methods=['POST'])
 def post_client():
