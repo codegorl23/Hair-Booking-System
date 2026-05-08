@@ -3,6 +3,9 @@ from app import db
 from app.models.appointment import Appointment
 from app.models.service import Service
 from app.models.client import Client
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_appointment(client_id, service_id, start_time_str):
@@ -12,7 +15,7 @@ def create_appointment(client_id, service_id, start_time_str):
     On success: (appointment_object, None, 201)
     On failure: (None, 'error message', error_code)
     """
-
+    logger.info(f"Appointment creation started: client_id={client_id} service_id={service_id}")
     # Parse the start_time string into a datetime object
     try:
         start_time = datetime.fromisoformat(start_time_str)
@@ -44,6 +47,7 @@ def create_appointment(client_id, service_id, start_time_str):
     ).first()
 
     if conflict:
+        logger.warning(f"Booking conflict: slot {start_time_str} is already taken")
         return None, 'This time slot is already booked', 409
 
     # Create the appointment
@@ -57,7 +61,7 @@ def create_appointment(client_id, service_id, start_time_str):
 
     db.session.add(appointment)
     db.session.commit()
-
+    logger.info(f"Appointment {appointment.id} created successfully for client_id={client_id}")
     return appointment, None, 201
 
 
@@ -99,6 +103,7 @@ def update_appointment_status(appointment_id, status):
 
     # Check status is valid
     if status not in valid_statuses:
+        logger.warning(f"Invalid status transition attempted: '{status}' is not a valid status")
         return None, f'status must be one of: {", ".join(valid_statuses)}', 400
 
     # Check appointment exists

@@ -2,7 +2,9 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
 from app import db
 from app.models.user import User
+import logging
 
+logger = logging.getLogger(__name__)
 auth_bp = Blueprint('auth', __name__)
 
 
@@ -30,11 +32,16 @@ def login():
     data = request.get_json()
     if not data or not data.get('email') or not data.get('password'):
         return jsonify({'error': 'email and password are required'}), 400
+    
     user = User.query.filter_by(email=data['email']).first()
+    
     if not user or not user.check_password(data['password']):
+        logger.warning(f"Failed login attempt for email: {data.get('email')}")
         return jsonify({'error': 'Invalid email or password'}), 401
     token = create_access_token(
         identity=str(user.id),
         additional_claims={'role': user.role}
     )
+
+    logger.info(f"Login successful: user_id={user.id} role={user.role}")
     return jsonify({'access_token': token, 'role': user.role}), 200

@@ -1,5 +1,7 @@
 from app import db
 from app.models.client import Client
+import logging
+logger = logging.getLogger(__name__)
 
 def create_client(name, email):
     """
@@ -23,5 +25,6 @@ def create_client(name, email):
 
     db.session.add(client)
     db.session.commit()
-
+    
+    logger.info(f"Client {client.id} registered successfully")
     return client, None, 201

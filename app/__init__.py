@@ -8,6 +8,7 @@ import os
 import uuid
 import logging
 
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -15,12 +16,12 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 
-logger = logging.getLogger(__name__)
-
 def create_app():
     app = Flask(__name__)
-    logging.basicConfig(level=logging.INFO)
-    app.logger.setLevel(logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO, 
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        )
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
