@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from app.services.appointment_service import create_appointment, get_all_appointments, get_appointment_by_id, update_appointment_status
+from app.utils.auth import require_role
 
 # Access Control:
 # POST   /appointments          - Auth required - Clients only
@@ -13,12 +14,8 @@ appointments_bp = Blueprint('appointments', __name__)
 
 @appointments_bp.route('/appointments', methods=['POST'])
 @jwt_required()
+@require_role('client')
 def post_appointment():
-    claims = get_jwt()
-    if claims['role'] != 'client':
-        return jsonify({'error': 'Client access only'}), 403
-    
-    
     data = request.get_json()
 
     # Validate body exists
@@ -31,7 +28,7 @@ def post_appointment():
         if field not in data:
             return jsonify({'error': f'{field} is required'}), 400
 
-    # Validate types
+          # Validate types
     if not isinstance(data['client_id'], int):
         return jsonify({'error': 'client_id must be an integer'}), 400
 
@@ -45,20 +42,20 @@ def post_appointment():
         start_time_str=data['start_time']
     )
 
+
     if error:
         return jsonify({'error': error}), status_code
 
     return jsonify(appointment.to_dict()), status_code
 
 
+
 @appointments_bp.route('/appointments', methods=['GET'])
 @jwt_required()
-def get_appointments():
-    claims = get_jwt()
-    if claims['role'] != 'stylist':
-        return jsonify({'error': 'Stylist access only'}), 403
+@require_role('stylist')
 
-    
+def get_appointments():
+
     appointments = get_all_appointments()
     return jsonify([a.to_dict() for a in appointments]), 200
 

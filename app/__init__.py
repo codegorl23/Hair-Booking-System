@@ -1,9 +1,12 @@
-from flask import Flask
+from flask import Flask, request, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
+from app.errors import register_error_handlers
 import os
+import uuid
+import logging
 
 
 load_dotenv()
@@ -12,8 +15,12 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 
+logger = logging.getLogger(__name__)
+
 def create_app():
     app = Flask(__name__)
+    logging.basicConfig(level=logging.INFO)
+    app.logger.setLevel(logging.INFO)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
@@ -40,5 +47,24 @@ def create_app():
     app.register_blueprint(appointments_bp)
     app.register_blueprint(clients_bp)
     app.register_blueprint(auth_bp)
+
+    register_error_handlers(app)
+
+    @app.before_request
+    def before_request():
+        g.request_id = str(uuid.uuid4())[:8]
+        logger.info(
+            f"[{g.request_id}] --> {request.method} {request.path}"
+        )
+
+    @app.after_request
+    def after_request(response):
+        logger.info(
+            f"[{g.request_id}] <-- {request.method} {request.path} "
+            f"{response.status_code}"
+        )
+        response.headers['X-Request-ID'] = g.request_id
+        return response
+
 
     return app
