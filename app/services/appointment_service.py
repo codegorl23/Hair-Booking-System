@@ -116,3 +116,40 @@ def update_appointment_status(appointment_id, status):
     db.session.commit()
 
     return appointment, None, 200
+
+def get_client_appointments(client_id):
+    """
+    Returns only upcoming booked appointments for a specific client.
+    Clients should not see past or cancelled appointments.
+    """
+    appointments = Appointment.query.filter(
+        Appointment.client_id == client_id,
+        Appointment.status == 'booked',
+        Appointment.start_time > datetime.now()
+    ).order_by(Appointment.start_time.asc()).all()
+    
+    logger.info(f"Client {client_id} retrieved {len(appointments)} upcoming appointments")
+    return appointments
+
+
+def get_appointment_by_id_for_client(appointment_id, client_id):
+    """
+    Returns a single appointment for a client.
+    Returns 404 if:
+    - appointment doesn't exist
+    - appointment belongs to another client
+    - appointment is in the past
+    - appointment is cancelled
+    This prevents clients from knowing other appointments exist at all.
+    """
+    appointment = Appointment.query.filter(
+        Appointment.id == appointment_id,
+        Appointment.client_id == int(client_id),
+        Appointment.status == 'booked',
+        Appointment.start_time > datetime.now()
+    ).first()
+
+    if not appointment:
+        return None, f'No appointment found with id {appointment_id}', 404
+
+    return appointment, None, 200

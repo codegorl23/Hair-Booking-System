@@ -1,13 +1,13 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
-from app.services.appointment_service import create_appointment, get_all_appointments, get_appointment_by_id, update_appointment_status
+from app.services.appointment_service import create_appointment, get_all_appointments, get_appointment_by_id, update_appointment_status, get_client_appointments, get_appointment_by_id_for_client
 from app.utils.auth import require_role
 
 # Access Control:
 # POST   /appointments          - Auth required - Clients only
-# GET    /appointments          - Auth required - Stylist only
-# GET    /appointments/<id>     - Auth required - Stylist or client who owns it
-# PATCH  /appointments/<id>     - Auth required - Stylist or client who owns it
+# GET    /appointments          - Auth required - Stylist (full history) or Client (upcoming only)
+# GET    /appointments/<id>     - Auth required - Stylist (any) or Client (own upcoming only)
+# PATCH  /appointments/<id>     - Auth required - Stylist or Client who owns it
 
 appointments_bp = Blueprint('appointments', __name__)
 
@@ -52,11 +52,15 @@ def post_appointment():
 
 @appointments_bp.route('/appointments', methods=['GET'])
 @jwt_required()
-@require_role('stylist')
-
 def get_appointments():
+    claims = get_jwt()
+    current_user_id = get_jwt_identity()
 
-    appointments = get_all_appointments()
+    if claims['role'] == 'stylist':
+        appointments = get_all_appointments()
+    else:
+        appointments = get_client_appointments(current_user_id)
+
     return jsonify([a.to_dict() for a in appointments]), 200
 
 @appointments_bp.route('/appointments/<int:appointment_id>', methods=['GET'])
@@ -65,14 +69,14 @@ def get_appointment(appointment_id):
     claims = get_jwt()
     current_user_id = get_jwt_identity()
 
-
-    appointment, error, status_code = get_appointment_by_id(appointment_id)
+    if claims['role'] == 'stylist':
+        appointment, error, status_code = get_appointment_by_id(appointment_id)
+    else:
+        appointment, error, status_code = get_appointment_by_id_for_client(appointment_id, current_user_id)
 
     if error:
         return jsonify({'error': error}), status_code
-    if claims['role'] == 'client' and str(appointment.client_id) != current_user_id: 
-        return jsonify({'error': 'Access forbidden'}), 403
-
+    
     return jsonify(appointment.to_dict()), status_code
 
 
