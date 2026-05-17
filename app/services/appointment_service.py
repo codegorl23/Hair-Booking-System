@@ -27,12 +27,12 @@ def create_appointment(client_id, service_id, start_time_str):
         return None, 'start_time must be in the future', 400
 
     # Check the client exists
-    client = Client.query.get(client_id)
+    client = db.session.get(Client,client_id)
     if not client:
         return None, f'No client found with id {client_id}', 404
 
     # Check the service exists
-    service = Service.query.get(service_id)
+    service = db.session.get(Service,service_id)
     if not service:
         return None, f'No service found with id {service_id}', 404
 
