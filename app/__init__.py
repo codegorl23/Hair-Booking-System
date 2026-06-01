@@ -1,4 +1,4 @@
-from flask import Flask, request, g
+from flask import Flask, app, request, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
@@ -22,9 +22,21 @@ def create_app(test_config=None):
         level=logging.INFO, 
         format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
         )
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+
+    database_url = os.getenv('DATABASE_URL')
+    jwt_secret = os.getenv('JWT_SECRET_KEY')
+    flask_env = os.getenv('FLASK_ENV', 'development')
+
+    if not test_config:
+        if not database_url:
+            raise RuntimeError('DATABASE_URL environment variable is not set')
+        if not jwt_secret:
+            raise RuntimeError('JWT_SECRET_KEY environment variable is not set')
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+    app.config['JWT_SECRET_KEY'] = jwt_secret
+    app.config['DEBUG'] = flask_env == 'development'
 
 
     if test_config:
