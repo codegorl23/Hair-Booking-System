@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from app.errors import register_error_handlers
-from flask import redirect
+from flask import jsonify
 import os
 import uuid
 import logging
@@ -87,6 +87,6 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return redirect('/login')
+        return jsonify({"message": "Hair Booking System API is running!"}), 200
 
     return app
