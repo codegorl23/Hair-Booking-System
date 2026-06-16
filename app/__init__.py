@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from app.errors import register_error_handlers
+from flask import redirect
 import os
 import uuid
 import logging
@@ -84,5 +85,8 @@ def create_app(test_config=None):
         response.headers['X-Request-ID'] = g.request_id
         return response
 
+    @app.route('/')
+    def index():
+        return redirect('/login')
 
     return app
